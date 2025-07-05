@@ -1,0 +1,21 @@
+# k8s/hpa.yml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: model-api-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: model-api-deployment # Target the deployment we created
+  minReplicas: 1
+  maxReplicas: 5 # Scale up to a maximum of 5 pods
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        # Target 50% CPU utilization. If average usage exceeds this,
+        # Kubernetes will add more pods.
+        averageUtilization: 50

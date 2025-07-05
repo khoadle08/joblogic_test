@@ -1,0 +1,53 @@
+# monitoring/docker-compose.monitoring.yml
+version: '3.8'
+
+networks:
+  monitoring-net:
+    driver: bridge
+
+services:
+  # The FastAPI application from Part C
+  model-api:
+    build:
+      context: ../app # Path to the app directory
+      dockerfile: Dockerfile
+    image: acme-serving:latest
+    container_name: model-api
+    networks:
+      - monitoring-net
+    ports:
+      - "8000:8000" # Expose API port
+    restart: unless-stopped
+
+  # Prometheus service for collecting metrics
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring-net
+    restart: unless-stopped
+
+  # Grafana service for visualizing metrics
+  grafana:
+    image: grafana/grafana:9.5.3
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount provisioning files to auto-configure datasource and dashboard
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+      # Mount dashboard JSON file
+      - ./grafana/dashboards/:/var/lib/grafana/dashboards/
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    networks:
+      - monitoring-net
+    restart: unless-stopped

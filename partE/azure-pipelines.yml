@@ -1,0 +1,72 @@
+# azure-pipelines.yml
+
+# Trigger the pipeline on pushes to the main branch
+trigger:
+- main
+
+# Define the agent pool. As required, this uses a self-hosted Linux agent 
+# from a private pool named 'MyPrivateLinuxPool'.
+pool:
+  name: 'MyPrivateLinuxPool'
+
+# Define variables used throughout the pipeline.
+# In a real Azure DevOps project, 'acr.password' should be stored as a secret variable.
+variables:
+  # === Docker & Azure Container Registry (ACR) Configuration ===
+  acr.serviceConnection: 'MyAcrServiceConnection' # Name of the ACR service connection in Azure DevOps
+  acr.name: 'myacmeacr'                            # Name of your Azure Container Registry
+  image.repository: 'acme-facilities/job-predictor'
+  image.tag: '$(Build.BuildId)'                      # Use the build ID for a unique image tag
+  
+  # === Python & Application Configuration ===
+  python.version: '3.9'
+  project.root: '$(System.DefaultWorkingDirectory)' # Root directory of the project
+
+# The pipeline consists of a single stage
+stages:
+- stage: BuildAndPush
+  displayName: 'Build, Test, and Push Docker Image'
+  jobs:
+  - job: 'Build'
+    displayName: 'Lint, Test, and publish'
+    steps:
+    - task: UsePythonVersion@0
+      displayName: 'Use Python $(python.version)'
+      inputs:
+        versionSpec: '$(python.version)'
+
+    - script: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install flake8 pytest
+      displayName: 'Install Python dependencies'
+
+    - script: |
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # E9 - SyntaxError, F63 - invalid syntax, F7 - forward annotation, F82 - undefined name
+      displayName: 'Lint with Flake8'
+
+    - script: |
+        pytest
+      displayName: 'Run unit tests with Pytest'
+
+    # This task logs into ACR. It uses a service connection for secure authentication.
+    # The service connection would be configured in the Azure DevOps project settings.
+    - task: Docker@2
+      displayName: 'Login to Azure Container Registry'
+      inputs:
+        command: login
+        containerRegistry: $(acr.serviceConnection)
+
+    # This task builds the Docker image and pushes it to the specified ACR.
+    # It automatically finds the 'Dockerfile' in the repository root.
+    - task: Docker@2
+      displayName: 'Build and push image to ACR'
+      inputs:
+        command: buildAndPush
+        repository: $(image.repository)
+        dockerfile: '$(project.root)/Dockerfile'
+        containerRegistry: $(acr.serviceConnection)
+        tags: |
+          $(image.tag)
+          latest

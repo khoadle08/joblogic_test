@@ -1,0 +1,36 @@
+# docker-compose.airflow.yml
+# This file sets up a self-contained Airflow environment.
+version: '3.8'
+
+services:
+  airflow-standalone:
+    image: apache/airflow:2.9.2 # Using a specific, recent version of Airflow
+    container_name: airflow_local_instance
+    user: "${AIRFLOW_UID:-50000}" # Set user to avoid permission issues with mounted files
+    environment:
+      # FIX: Changed executor to SequentialExecutor.
+      # This is required because LocalExecutor is no longer compatible with SQLite
+      # in modern Airflow versions to prevent data corruption.
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db # Updated config key
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false # Disable example DAGs for a cleaner UI
+      - AIRFLOW_URL=http://localhost:8080
+
+      - _AIRFLOW_WWW_USER_USERNAME=user
+      - _AIRFLOW_WWW_USER_PASSWORD=user
+    volumes:
+      # Mount local directories into the container for DAGs, logs, and data I/O
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/data:/opt/airflow/data
+      # Mount the input data file so the DAG can access it
+      - ./sample_data.csv:/opt/airflow/sample_data.csv
+    ports:
+      - "8080:8080" # Expose the Airflow Web UI port
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    # The 'standalone' command initializes the DB, creates a user, and starts all services.
+    command: standalone

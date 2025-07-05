@@ -1,0 +1,27 @@
+# k8s/deployment.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-api-deployment
+spec:
+  replicas: 2 # Start with 2 instances of the API
+  selector:
+    matchLabels:
+      app: model-api
+  template:
+    metadata:
+      labels:
+        app: model-api
+    spec:
+      containers:
+      - name: model-api-container
+        image: acme-serving:latest # The image we will build
+        imagePullPolicy: IfNotPresent # Important for local dev with kind
+        ports:
+        - containerPort: 8000
+        # Resource requests and limits are crucial for HPA to work
+        resources:
+          requests:
+            cpu: "200m" # Request 0.2 of a CPU core
+          limits:
+            cpu: "500m" # Limit to 0.5 of a CPU core
