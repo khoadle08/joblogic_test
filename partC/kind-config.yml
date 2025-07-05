@@ -1,0 +1,11 @@
+# kind-config.yml
+# This configuration creates a kind cluster and maps port 5000 on the
+# host machine to port 30005 on the Kubernetes node.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+  extraPortMappings:
+  - containerPort: 30005 # This matches the nodePort in service.yml
+    hostPort: 5000       # This is the port we will access from our local machine
+    protocol: TCP

@@ -1,0 +1,18 @@
+# k8s/service.yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: model-api-service
+spec:
+  # Expose the service on a static port on each node
+  type: NodePort
+  selector:
+    app: model-api # This must match the labels on the pods
+  ports:
+    - protocol: TCP
+      port: 8000       # Port inside the cluster
+      targetPort: 8000 # Port on the pod
+      # The prompt asks for port 5000. This is outside the default range.
+      # We will configure kind to map this port to the host.
+      # We specify a port within the valid range here, and map it in kind-config.yml
+      nodePort: 30005

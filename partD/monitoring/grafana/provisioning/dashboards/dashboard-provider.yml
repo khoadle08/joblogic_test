@@ -1,0 +1,14 @@
+apiVersion: 1
+
+providers:
+  # A list of dashboard providers
+  - name: 'default'  # A unique name for the provider
+    orgId: 1         # The organization ID to import dashboards into
+    folder: ''       # The folder in Grafana UI to save dashboards to (empty for General)
+    type: file       # The type of provider
+    disableDeletion: false # Do not delete dashboards from the DB when a file is removed
+    editable: true     # Dashboards can be edited in the UI
+    options:
+      # Path where Grafana will look for dashboard JSON files inside the container.
+      # This path is mounted via docker-compose.
+      path: /var/lib/grafana/dashboards

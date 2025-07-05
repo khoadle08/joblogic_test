@@ -1,0 +1,83 @@
+{
+    "__inputs": [],
+    "__requires": [],
+    "annotations": {
+      "list": [
+        {
+          "builtIn": 1,
+          "datasource": {
+            "type": "grafana",
+            "uid": "-- Grafana --"
+          },
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "type": "dashboard"
+        }
+      ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "gnetId": null,
+    "graphTooltip": 0,
+    "id": 1,
+    "links": [],
+    "panels": [
+      {
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "id": 1,
+        "title": "API Request Rate",
+        "type": "timeseries",
+        "datasource": { "type": "prometheus", "uid": "Prometheus" },
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{job=\"model-api-service\"}[5m])",
+            "legendFormat": "{{handler}} - {{status}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+        "id": 2,
+        "title": "API Request Latency (95th Percentile)",
+        "type": "timeseries",
+        "datasource": { "type": "prometheus", "uid": "Prometheus" },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_requests_latency_seconds_bucket{job=\"model-api-service\"}[5m])) by (le, handler))",
+            "legendFormat": "{{handler}}",
+            "refId": "A"
+          }
+        ],
+        "unit": "s"
+      },
+      {
+        "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+        "id": 3,
+        "title": "HTTP Status Codes",
+        "type": "stat",
+        "datasource": { "type": "prometheus", "uid": "Prometheus" },
+        "targets": [
+          {
+            "expr": "sum(increase(http_requests_total{job=\"model-api-service\"}[5m])) by (status)",
+            "legendFormat": "Status {{status}}",
+            "refId": "A"
+          }
+        ]
+      }
+    ],
+    "schemaVersion": 37,
+    "style": "dark",
+    "tags": [],
+    "templating": { "list": [] },
+    "time": { "from": "now-1h", "to": "now" },
+    "timepicker": {},
+    "timezone": "",
+    "title": "Model API Monitoring",
+    "uid": "api-dashboard",
+    "version": 1,
+    "weekStart": ""
+  }
+  

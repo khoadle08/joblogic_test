@@ -1,0 +1,10 @@
+# monitoring/prometheus/prometheus.yml
+global:
+  scrape_interval: 15s # How frequently to scrape targets
+
+scrape_configs:
+  - job_name: 'model-api-service'
+    # The API service is available at hostname 'model-api' on port 8000
+    # within the Docker Compose network.
+    static_configs:
+      - targets: ['model-api:8000']

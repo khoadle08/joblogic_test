@@ -1,0 +1,25 @@
+# monitoring/grafana/provisioning/datasources/datasource.yml
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    # URL of the Prometheus service within the Docker network
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+---
+# monitoring/grafana/provisioning/dashboards/dashboard-provider.yml
+apiVersion: 1
+
+providers:
+  - name: 'default'
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      # Path where Grafana will look for dashboard JSON files
+      path: /var/lib/grafana/dashboards
